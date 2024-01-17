@@ -1,20 +1,33 @@
+import sys
+for i, arg in enumerate(sys.argv):
+    if arg == "-T":
+        threads = int(sys.argv[i+1])
+        print("Threads "+ str(threads))
+        break
+import tensorflow as tf
+tf.config.threading.set_inter_op_parallelism_threads(threads)
+tf.config.threading.set_intra_op_parallelism_threads(threads)
+
 from pkg_resources import resource_filename
 import pandas as pd
 import numpy as np
 from pyfaidx import Fasta
 from keras.models import load_model
 import logging
+import sys
+import os
 
+
+# tf.config.threading.set_inter_op_parallelism_threads(2)
+# tf.config.threading.set_intra_op_parallelism_threads(2)
 
 class Annotator:
-
     def __init__(self, ref_fasta, annotations):
 
         if annotations == 'grch37':
             annotations = resource_filename(__name__, 'annotations/grch37.txt')
         elif annotations == 'grch38':
             annotations = resource_filename(__name__, 'annotations/grch38.txt')
-
         try:
             df = pd.read_csv(annotations, sep='\t', dtype={'CHROM': object})
             self.genes = df['#NAME'].to_numpy()
@@ -26,6 +39,7 @@ class Annotator:
                                 for c in df['EXON_START'].to_numpy()]
             self.exon_ends = [np.asarray([int(i) for i in c.split(',') if i])
                               for c in df['EXON_END'].to_numpy()]
+
         except IOError as e:
             logging.error('{}'.format(e))
             exit()

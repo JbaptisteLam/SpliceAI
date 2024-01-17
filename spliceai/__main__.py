@@ -34,6 +34,7 @@ def get_options():
                         type=int, choices=[0, 1],
                         help='mask scores representing annotated acceptor/donor gain and '
                              'unannotated acceptor/donor loss, defaults to 0')
+    parser.add_argument("-T", metavar='threads', nargs='?', default=10, type=int, choices=range(1, 200), help="number of cpu")
     args = parser.parse_args()
 
     return args
@@ -43,9 +44,9 @@ def main():
 
     args = get_options()
 
-    if None in [args.I, args.O, args.D, args.M]:
+    if None in [args.I, args.O, args.D, args.M, args.T]:
         logging.error('Usage: spliceai [-h] [-I [input]] [-O [output]] -R reference -A annotation '
-                      '[-D [distance]] [-M [mask]]')
+                      '[-D [distance]] [-M [mask]] [-T [threads]]')
         exit()
 
     try:
@@ -64,8 +65,6 @@ def main():
         output = pysam.VariantFile(args.O, mode='w', header=header)
     except (IOError, ValueError) as e:
         logging.error('{}'.format(e))
-        exit()
-
     ann = Annotator(args.R, args.A)
 
     for record in vcf:
